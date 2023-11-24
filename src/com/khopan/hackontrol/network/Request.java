@@ -18,6 +18,10 @@ public class Request {
 		this.request(RequestMode.STATUS_QUERY, this.mapper.createObjectNode());
 	}
 
+	public void screenshot() {
+		this.request(RequestMode.TAKE_SCREENSHOT, this.mapper.createObjectNode());
+	}
+
 	private void request(int requestMode, ObjectNode node) {
 		node.put("requestMode", requestMode);
 		String message = node.toString();
