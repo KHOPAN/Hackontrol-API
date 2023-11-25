@@ -70,6 +70,14 @@ public class Response {
 
 			this.hackontrol.screenshotTaken(identifier, attachmentList.get(0));
 			break;
+		case ResponseMode.COMMAND_RESULT:
+			if(!node.has("result")) {
+				return;
+			}
+
+			String result = node.get("result").asText();
+			this.hackontrol.commandResult(identifier, result);
+			break;
 		}
 	}
 }

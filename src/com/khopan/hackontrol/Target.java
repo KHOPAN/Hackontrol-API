@@ -1,9 +1,6 @@
 package com.khopan.hackontrol;
 
-import java.awt.image.BufferedImage;
 import java.io.InputStream;
-
-import javax.imageio.ImageIO;
 
 import net.dv8tion.jda.api.entities.Message.Attachment;
 
@@ -13,7 +10,8 @@ public class Target {
 
 	boolean connected;
 
-	private volatile BufferedImage image;
+	private volatile byte[] image;
+	private volatile String commandResult;
 
 	public Target(Hackontrol hackontrol, MachineId identifier) {
 		this.hackontrol = hackontrol;
@@ -25,7 +23,7 @@ public class Target {
 		return this.identifier;
 	}
 
-	public BufferedImage screenshot() {
+	public byte[] screenshot() {
 		this.check();
 		this.image = null;
 		this.hackontrol.request.screenshot();
@@ -33,13 +31,21 @@ public class Target {
 		return this.image;
 	}
 
+	public String command(String command) {
+		this.check();
+		this.commandResult = null;
+		this.hackontrol.request.command(command);
+		while(this.commandResult == null) {}
+		return this.commandResult;
+	}
+
 	void screenshotTaken(Attachment attachment) {
 		new Thread(() -> {
-			BufferedImage image;
+			byte[] image;
 
 			try {
 				InputStream stream = attachment.getProxy().download().get();
-				image = ImageIO.read(stream);
+				image = stream.readAllBytes();
 			} catch(Throwable ignored) {
 				ignored.printStackTrace();
 				return;
@@ -47,6 +53,10 @@ public class Target {
 
 			this.image = image;
 		}).start();
+	}
+
+	void commandResult(String result) {
+		this.commandResult = result;
 	}
 
 	private void check() {
