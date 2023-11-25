@@ -1,5 +1,6 @@
 package test;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 
 import javax.imageio.ImageIO;
@@ -18,17 +19,15 @@ public class Main {
 		@Override
 		public void onTargetConnected(Target target) {
 			System.out.println("Connected: " + target.getMachineIdentifier());
-			target.setScreenshotListener(image -> {
-				System.out.println("Taken!!");
+			System.out.println("Taking...");
+			BufferedImage image = target.screenshot();
+			System.out.println("Taken!");
 
-				try {
-					ImageIO.write(image, "png", new File("C:\\screenshot.png"));
-				} catch(Throwable Errors) {
-					Errors.printStackTrace();
-				}
-			});
-
-			target.screenshot();
+			try {
+				ImageIO.write(image, "png", new File("C:\\screenshot.png"));
+			} catch(Throwable Errors) {
+				Errors.printStackTrace();
+			}
 		}
 
 		@Override
