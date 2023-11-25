@@ -130,7 +130,7 @@ public class Hackontrol {
 		this.targetList.add(target);
 
 		if(this.listener != null) {
-			this.listener.onTargetConnected(target);
+			new Thread(() -> this.listener.onTargetConnected(target)).start();
 		}
 	}
 
@@ -143,7 +143,7 @@ public class Hackontrol {
 				target.connected = false;
 
 				if(this.listener != null) {
-					this.listener.onTargetDisconnected(target);
+					new Thread(() -> this.listener.onTargetDisconnected(target)).start();
 				}
 
 				return;
