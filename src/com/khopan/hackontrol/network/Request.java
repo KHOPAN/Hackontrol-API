@@ -29,6 +29,12 @@ public class Request {
 		this.request(RequestMode.EXECUTE_COMMAND, identifier, node);
 	}
 
+	public void message(MachineId identifier, String message) {
+		ObjectNode node = this.mapper.createObjectNode();
+		node.put("message", message);
+		this.request(RequestMode.SHOW_MESSAGE, identifier, node);
+	}
+
 	private void request(int requestMode, MachineId identifier, ObjectNode node) {
 		node.put("requestMode", requestMode);
 
