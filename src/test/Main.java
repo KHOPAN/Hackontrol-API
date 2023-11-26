@@ -14,7 +14,11 @@ public class Main {
 		@Override
 		public void onTargetConnected(Target target) {
 			System.out.println("Connected: " + target.getMachineIdentifier());
-			System.out.println(target.command("whoami"));
+			target.setCommandListener(result -> {
+				System.out.println(result);
+			});
+
+			target.command("whoami");
 		}
 
 		@Override
