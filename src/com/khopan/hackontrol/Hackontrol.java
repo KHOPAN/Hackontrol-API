@@ -1,5 +1,6 @@
 package com.khopan.hackontrol;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -182,7 +183,7 @@ public class Hackontrol {
 			String text = message.getContentDisplay();
 			List<Attachment> attachmentList = message.getAttachments();
 
-			if(!text.isBlank()) {
+			if(!text.isEmpty()) {
 				Hackontrol.this.response.parse(text, attachmentList);
 				return;
 			}
@@ -194,8 +195,20 @@ public class Hackontrol {
 				String content;
 
 				try {
-					InputStream stream = attachment.getProxy().download().get();
-					content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+					InputStream inputStream = attachment.getProxy().download().get();
+					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+					while(true) {
+						int data = inputStream.read();
+
+						if(data == -1) {
+							break;
+						}
+
+						outputStream.write(data);
+					}
+
+					content = new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
 				} catch(Throwable ignored) {
 					return;
 				}
