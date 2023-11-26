@@ -45,12 +45,12 @@ public class Target {
 
 	public void screenshot() {
 		this.check();
-		this.hackontrol.request.screenshot();
+		this.hackontrol.request.screenshot(this.identifier);
 	}
 
 	public void command(String command) {
 		this.check();
-		this.hackontrol.request.command(command);
+		this.hackontrol.request.command(this.identifier, command);
 	}
 
 	void screenshotTaken(Attachment attachment) {
