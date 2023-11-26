@@ -19,6 +19,7 @@ public class Main {
 			});
 
 			target.command("whoami");
+			target.message("Hello, Target!");
 		}
 
 		@Override
